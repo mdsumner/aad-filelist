@@ -9,7 +9,7 @@
 ##   MIRROR_ROOT   local file root for bowerbird (default: tempdir())
 ##   DRY_RUN       "TRUE" to enumerate without downloading (default: "FALSE")
 
-#library(bowerbird)
+library(bowerbird)
 library(arrow)
 library(dplyr)
 
