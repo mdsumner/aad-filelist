@@ -7,7 +7,7 @@ Each collection is defined in its own R file under [`sources/`](sources/) using
 workflow enumerates each collection and publishes the result as a Parquet file
 on the [latest release](../../releases/latest).
 
-**Summary page:** <https://australianantarcticdivision.github.io/aad-filelist/>
+**Summary page:** <https://mdsumner.github.io/aad-filelist/>
 
 ---
 
