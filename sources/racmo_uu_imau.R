@@ -2,9 +2,7 @@
 ## Served via THREDDS fileServer at cordex.dmi.dk
 ## Maintainer: <your name>
 
-library(bowerbird)
-
-src <- bb_source(
+src <- bowerbird::bb_source(
   name        = "PolarRES ANT-12 RACMO (UU-IMAU)",
   id          = "cordex-polarres-ant12-racmo-uu-imau",
   description = paste0(
