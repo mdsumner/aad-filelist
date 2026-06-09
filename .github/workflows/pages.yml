@@ -1,6 +1,9 @@
 name: Publish summary page
 
 on:
+  workflow_run:
+    workflows: ["Sync file listings"]
+    types: [completed]
   release:
     types: [published, edited]
   workflow_dispatch:
@@ -16,6 +19,7 @@ concurrency:
 
 jobs:
   build:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
