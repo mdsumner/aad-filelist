@@ -54,25 +54,32 @@ source_meta <- map_dfr(source_files, function(f) {
 ## Falls back gracefully if the asset doesn't exist yet.
 get_parquet_meta <- function(id) {
   url <- glue("{release_base}/{id}.parquet")
-  tryCatch({
+  result <- tryCatch({
     df <- read_parquet(url)
     list(
-      n_files   = nrow(df),
-      sync_time = format(max(df$sync_time, na.rm = TRUE), "%Y-%m-%d %H:%M UTC"),
+      n_files     = nrow(df),
+      sync_time   = format(max(df$sync_time, na.rm = TRUE), "%Y-%m-%d %H:%M UTC"),
       parquet_url = url
     )
   }, error = function(e) {
-    list(n_files = NA_integer_, sync_time = "not yet synced", parquet_url = url)
+    list(
+      n_files     = NA_integer_,
+      sync_time   = "not yet synced",
+      parquet_url = url
+    )
   })
+  result
 }
 
 parquet_meta <- map(source_meta$id, get_parquet_meta)
 
+## extract each field as a plain vector rather than relying on map_int/map_chr
+## on a list-of-lists, which is fragile when fallbacks are involved
 summary_tbl <- source_meta |>
   mutate(
-    n_files   = map_int(parquet_meta, "n_files"),
-    sync_time = map_chr(parquet_meta, "sync_time"),
-    parquet_url = map_chr(parquet_meta, "parquet_url"),
+    n_files     = vapply(parquet_meta, `[[`, integer(1), "n_files"),
+    sync_time   = vapply(parquet_meta, `[[`, character(1), "sync_time"),
+    parquet_url = vapply(parquet_meta, `[[`, character(1), "parquet_url"),
     source_url  = glue("{gh_raw}/sources/{source_file}")
   )
 ```
