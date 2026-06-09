@@ -1,0 +1,113 @@
+---
+title: "aad-filelist"
+subtitle: "Antarctic / Southern Ocean file-listing cache"
+format:
+  html:
+    theme: cosmo
+    toc: false
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r setup}
+library(dplyr)
+library(purrr)
+library(arrow)
+library(glue)
+library(fs)
+
+## GitHub repo details -------------------------------------------------------
+gh_owner <- "AustralianAntarcticDivision"
+gh_repo  <- "aad-filelist"
+gh_raw   <- glue("https://raw.githubusercontent.com/{gh_owner}/{gh_repo}/main")
+## Release assets are at:
+## https://github.com/{owner}/{repo}/releases/download/latest/{id}.parquet
+release_base <- glue("https://github.com/{gh_owner}/{gh_repo}/releases/download/latest")
+```
+
+```{r load-sources}
+## Source each sources/*.R to extract metadata without running a sync.
+## Each file defines a single `src` object (a bb_source tibble).
+source_files <- fs::dir_ls("sources", glob = "*.R")
+
+source_meta <- map_dfr(source_files, function(f) {
+  e <- new.env(parent = emptyenv())
+  ## suppress package load messages
+  suppressPackageStartupMessages(source(f, local = e))
+  s <- e$src
+  tibble(
+    source_file  = fs::path_file(f),
+    id           = s$id[[1]],
+    name         = s$name[[1]],
+    description  = s$description[[1]],
+    doc_url      = s$doc_url[[1]],
+    license      = s$license[[1]]
+  )
+})
+```
+
+```{r read-parquets}
+## Try to read the first row of each Parquet asset to get last sync time.
+## Falls back gracefully if the asset doesn't exist yet.
+get_parquet_meta <- function(id) {
+  url <- glue("{release_base}/{id}.parquet")
+  tryCatch({
+    df <- read_parquet(url)
+    list(
+      n_files   = nrow(df),
+      sync_time = format(max(df$sync_time, na.rm = TRUE), "%Y-%m-%d %H:%M UTC"),
+      parquet_url = url
+    )
+  }, error = function(e) {
+    list(n_files = NA_integer_, sync_time = "not yet synced", parquet_url = url)
+  })
+}
+
+parquet_meta <- map(source_meta$id, get_parquet_meta)
+
+summary_tbl <- source_meta |>
+  mutate(
+    n_files   = map_int(parquet_meta, "n_files"),
+    sync_time = map_chr(parquet_meta, "sync_time"),
+    parquet_url = map_chr(parquet_meta, "parquet_url"),
+    source_url  = glue("{gh_raw}/sources/{source_file}")
+  )
+```
+
+This repo provides per-collection file-listing caches for Antarctic regional
+climate model output.  Each collection is defined in its own R file using
+[bowerbird](https://docs.ropensci.org/bowerbird/), and the resulting file
+manifest is published here as a Parquet file for each release.
+
+**To use a manifest in R:**
+
+```r
+arrow::read_parquet(
+  "https://github.com/AustralianAntarcticDivision/aad-filelist/releases/download/latest/cordex-polarres-ant12-hclim-dmi.parquet"
+)
+```
+
+---
+
+```{r table}
+summary_tbl |>
+  transmute(
+    Collection = glue('<a href="{doc_url}">{name}</a>'),
+    Description = description,
+    `R source` = glue('<a href="{source_url}"><code>{source_file}</code></a>'),
+    `Parquet cache` = glue('<a href="{parquet_url}"><code>{id}.parquet</code></a>'),
+    `Files listed` = ifelse(is.na(n_files), "—", as.character(n_files)),
+    `Last synced` = sync_time
+  ) |>
+  knitr::kable(format = "html", escape = FALSE) |>
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                            full_width = TRUE)
+```
+
+---
+
+*Synced via GitHub Actions.
+Source: [`AustralianAntarcticDivision/aad-filelist`](https://github.com/AustralianAntarcticDivision/aad-filelist)*
