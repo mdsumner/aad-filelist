@@ -22,11 +22,9 @@ dry_run <- "--dry-run" %in% args || identical(Sys.getenv("DRY_RUN"), "TRUE")
 if (!file.exists(source_file))
   stop("Source file not found: ", source_file)
 
-## Each sources/*.R defines a single object named `src`
-local({
-  source(source_file, local = TRUE)
-  src <<- src
-})
+e <- new.env(parent = baseenv())
+source(source_file, local = e)
+src <- e$src
 
 stopifnot(inherits(src, "data.frame"), "id" %in% names(src))
 id <- src$id[[1]]
