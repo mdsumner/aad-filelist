@@ -16,7 +16,7 @@ library(dplyr)
 args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) stop("Usage: Rscript sync.R sources/<name>.R")
 
-#source_file <- args[1]
+source_file <- args[1]
 dry_run <- TRUE
 
 if (!file.exists(source_file))
