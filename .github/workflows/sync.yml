@@ -1,0 +1,75 @@
+name: Sync file listings
+
+on:
+  schedule:
+    - cron: "0 2 * * 1"   # weekly, Monday 02:00 UTC
+  workflow_dispatch:
+    inputs:
+      source:
+        description: "Single source to sync (e.g. hclim_dmi). Leave blank for all."
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run only (enumerate without downloading)"
+        type: boolean
+        default: true
+
+jobs:
+  ## Dynamically build the matrix from sources/*.R filenames
+  list-sources:
+    runs-on: ubuntu-latest
+    outputs:
+      sources: ${{ steps.ls.outputs.sources }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: ls
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.source }}" ]; then
+            # single source requested via manual dispatch
+            echo "sources=[\"${{ github.event.inputs.source }}\"]" >> "$GITHUB_OUTPUT"
+          else
+            names=$(ls sources/*.R | xargs -I{} basename {} .R | jq -R . | jq -sc .)
+            echo "sources=$names" >> "$GITHUB_OUTPUT"
+          fi
+
+  sync:
+    needs: list-sources
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        source: ${{ fromJson(needs.list-sources.outputs.sources) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: "release"
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            ropensci/bowerbird
+            arrow
+            dplyr
+
+      - name: Sync and write Parquet
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
+          MIRROR_ROOT: ${{ runner.temp }}/mirror
+        run: |
+          Rscript sync.R sources/${{ matrix.source }}.R \
+            ${{ (github.event.inputs.dry_run == 'true' || github.event_name == 'schedule') && '--dry-run' || '' }}
+
+      - name: Upload Parquet to latest release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest file listings"
+          make_latest: true
+          files: "*.parquet"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
