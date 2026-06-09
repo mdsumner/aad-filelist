@@ -8,7 +8,7 @@ library(bowerbird)
 source_files <- list.files("sources", pattern = "\\.R$", full.names = TRUE)
 
 ids <- vapply(source_files, function(f) {
-  e <- new.env(parent = emptyenv())
+  e <- new.env(parent = baseenv())
   suppressPackageStartupMessages(source(f, local = e))
   if (!exists("src", envir = e)) stop("No `src` object found in ", f)
   e$src$id[[1]]
