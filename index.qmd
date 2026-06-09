@@ -18,7 +18,7 @@ library(purrr)
 library(arrow)
 library(glue)
 library(fs)
-
+library(bowerbird)
 ## GitHub repo details -------------------------------------------------------
 gh_owner <- "AustralianAntarcticDivision"
 gh_repo  <- "aad-filelist"
@@ -36,7 +36,7 @@ source_files <- fs::dir_ls("sources", glob = "*.R")
 source_meta <- map_dfr(source_files, function(f) {
   e <- new.env(parent = emptyenv())
   ## suppress package load messages
-  suppressPackageStartupMessages(source(f, local = e))
+  suppressPackageStartupMessages(source(f, local = FALSE))
   s <- e$src
   tibble(
     source_file  = fs::path_file(f),

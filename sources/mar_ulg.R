@@ -3,7 +3,7 @@
 ## Driving datasets: ERA5, CESM2, MPI-ESM1-2-HR
 ## Maintainer: <your name>
 
-library(bowerbird)
+#library(bowerbird)
 
 src <- bb_source(
   name        = "PolarRES ANT-12 MAR v3.13 (ULg)",
