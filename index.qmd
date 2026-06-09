@@ -33,9 +33,9 @@ release_base <- glue("https://github.com/{gh_owner}/{gh_repo}/releases/download/
 ## Each file defines a single `src` object (a bb_source tibble).
 source_files <- fs::dir_ls("sources", glob = "*.R")
 
+## load-sources chunk — add data_group to the extract
 source_meta <- map_dfr(source_files, function(f) {
-e <- new.env(parent = baseenv())
-  ## suppress package load messages
+  e <- new.env(parent = baseenv())
   suppressPackageStartupMessages(source(f, local = e))
   s <- e$src
   tibble(
@@ -44,7 +44,8 @@ e <- new.env(parent = baseenv())
     name         = s$name[[1]],
     description  = s$description[[1]],
     doc_url      = s$doc_url[[1]],
-    license      = s$license[[1]]
+    license      = s$license[[1]],
+    data_group   = if ("data_group" %in% names(s)) s$data_group[[1]] else "Ungrouped"
   )
 })
 ```
@@ -99,19 +100,29 @@ arrow::read_parquet(
 
 ---
 
-```{r table, eval=TRUE}
-summary_tbl |>
-  transmute(
-    Collection = glue('<a href="{doc_url}">{name}</a>'),
-    Description = description,
-    `R source` = glue('<a href="{source_url}"><code>{source_file}</code></a>'),
-    `Parquet cache` = glue('<a href="{parquet_url}"><code>{id}.parquet</code></a>'),
-    `Files listed` = ifelse(is.na(n_files), "—", as.character(n_files)),
-    `Last synced` = sync_time
-  ) |>
-  knitr::kable(format = "html", escape = FALSE) |>
-  kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
-                            full_width = TRUE)
+```{r table, eval=TRUE, results="asis"}
+## table chunk
+groups <- split(summary_tbl, summary_tbl$data_group)
+
+for (grp_name in sort(names(groups))) {
+  cat("##", grp_name, "\n\n")
+  
+  groups[[grp_name]] |>
+    transmute(
+      Collection     = glue('<a href="{doc_url}">{name}</a>'),
+      Description    = description,
+      `R source`     = glue('<a href="{source_url}"><code>{source_file}</code></a>'),
+      `Parquet cache`= glue('<a href="{parquet_url}"><code>{id}.parquet</code></a>'),
+      `Files listed` = ifelse(is.na(n_files), "—", as.character(n_files)),
+      `Last synced`  = sync_time
+    ) |>
+    knitr::kable(format = "html", escape = FALSE) |>
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                              full_width = TRUE) |>
+    print()
+  
+  cat("\n\n")
+}
 ```
 
 ---
