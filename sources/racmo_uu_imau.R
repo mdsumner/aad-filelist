@@ -19,7 +19,7 @@ src <- bowerbird::bb_source(
     "bb_handler_rget",
     level           = 8,
     no_parent       = TRUE,
-    accept_follow   = "/day/",
+  ##  accept_follow   = "/day/",
     accept_download = "\\.nc$"
   ),
   data_group  = "Regional climate model output"
