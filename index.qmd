@@ -49,7 +49,7 @@ source_meta <- map_dfr(source_files, function(f) {
 })
 ```
 
-```{r read-parquets, eval=FALSE}
+```{r read-parquets, eval=TRUE}
 ## Try to read the first row of each Parquet asset to get last sync time.
 ## Falls back gracefully if the asset doesn't exist yet.
 get_parquet_meta <- function(id) {
@@ -99,7 +99,7 @@ arrow::read_parquet(
 
 ---
 
-```{r table, eval=FALSE}
+```{r table, eval=TRUE}
 summary_tbl |>
   transmute(
     Collection = glue('<a href="{doc_url}">{name}</a>'),

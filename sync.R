@@ -35,7 +35,7 @@ message("Dry run:   ", dry_run)
 
 mirror_root <- Sys.getenv("MIRROR_ROOT", unset = tempdir())
 message("Mirror root: ", mirror_root)
-print(sprintf("Mirror root: %s", mirror_root))
+
 cf <- bb_config(local_file_root = mirror_root) |>
   bb_add(src)
 
@@ -47,7 +47,6 @@ status <- bb_sync(cf, verbose = TRUE, dry_run = dry_run, create_root = TRUE)
 ## We normalise to a tidy tibble and write <id>.parquet.
 
 file_df <- status$files[[1]]
-print(sprintf("status files: %i", nrow(file_df)))
 
 ## bb_sync returns different column sets depending on version; be defensive
 manifest <- tibble(
