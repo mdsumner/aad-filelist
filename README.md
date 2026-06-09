@@ -18,7 +18,7 @@ library(arrow)
 
 ## read any listing directly from the release
 hclim <- read_parquet(
-  "https://github.com/AustralianAntarcticDivision/aad-filelist/releases/download/latest/cordex-polarres-ant12-hclim-dmi.parquet"
+  "https://github.com/mdsumner/aad-filelist/releases/download/latest/cordex-polarres-ant12-hclim-dmi.parquet"
 )
 
 dplyr::glimpse(hclim)
