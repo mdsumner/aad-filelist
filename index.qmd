@@ -93,7 +93,7 @@ manifest is published here as a Parquet file for each release.
 
 ```r
 arrow::read_parquet(
-  "https://github.com/AustralianAntarcticDivision/aad-filelist/releases/download/latest/cordex-polarres-ant12-hclim-dmi.parquet"
+  "https://github.com/mdsumner/aad-filelist/releases/download/latest/cordex-polarres-ant12-hclim-dmi.parquet"
 )
 ```
 
@@ -117,4 +117,4 @@ summary_tbl |>
 ---
 
 *Synced via GitHub Actions.
-Source: [`AustralianAntarcticDivision/aad-filelist`](https://github.com/AustralianAntarcticDivision/aad-filelist)*
+Source: [`mdsumner/aad-filelist`](https://github.com/mdsumner/aad-filelist)*
