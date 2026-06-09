@@ -14,10 +14,10 @@ library(arrow)
 library(dplyr)
 
 args <- commandArgs(trailingOnly = TRUE)
-if (length(args) == 0) stop("Usage: Rscript sync.R sources/<name>.R [--dry-run]")
+if (length(args) == 0) stop("Usage: Rscript sync.R sources/<name>.R")
 
-source_file <- args[1]
-dry_run <- "--dry-run" %in% args || identical(Sys.getenv("DRY_RUN"), "TRUE")
+#source_file <- args[1]
+dry_run <- TRUE
 
 if (!file.exists(source_file))
   stop("Source file not found: ", source_file)

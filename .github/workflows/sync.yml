@@ -9,10 +9,6 @@ on:
         description: "Single source to sync (e.g. hclim_dmi). Leave blank for all."
         required: false
         default: ""
-      dry_run:
-        description: "Dry run only (enumerate without downloading)"
-        type: boolean
-        default: true
 
 jobs:
   ## Dynamically build the matrix from sources/*.R filenames
@@ -58,11 +54,9 @@ jobs:
 
       - name: Sync and write Parquet
         env:
-          DRY_RUN: ${{ github.event.inputs.dry_run || 'true' }}
           MIRROR_ROOT: ${{ runner.temp }}/mirror
         run: |
-          Rscript sync.R sources/${{ matrix.source }}.R \
-            ${{ (github.event.inputs.dry_run == 'true' || github.event_name == 'schedule') && '--dry-run' || '' }}
+          Rscript sync.R sources/${{ matrix.source }}.R
 
       - name: Upload Parquet to latest release
         uses: softprops/action-gh-release@v2
