@@ -20,7 +20,7 @@ library(glue)
 library(fs)
 library(bowerbird)
 ## GitHub repo details -------------------------------------------------------
-gh_owner <- "AustralianAntarcticDivision"
+gh_owner <- "mdsumner"
 gh_repo  <- "aad-filelist"
 gh_raw   <- glue("https://raw.githubusercontent.com/{gh_owner}/{gh_repo}/main")
 ## Release assets are at:
@@ -34,9 +34,9 @@ release_base <- glue("https://github.com/{gh_owner}/{gh_repo}/releases/download/
 source_files <- fs::dir_ls("sources", glob = "*.R")
 
 source_meta <- map_dfr(source_files, function(f) {
-  e <- new.env(parent = emptyenv())
+e <- new.env(parent = baseenv())
   ## suppress package load messages
-  suppressPackageStartupMessages(source(f, local = FALSE))
+  suppressPackageStartupMessages(source(f, local = e))
   s <- e$src
   tibble(
     source_file  = fs::path_file(f),
