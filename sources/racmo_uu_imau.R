@@ -17,9 +17,9 @@ src <- bowerbird::bb_source(
   source_url  = "https://cordex.dmi.dk/thredds/fileServer/esg_cordex/PolarRes/ANT-12/UU-IMAU/",
   method      = list(
     "bb_handler_rget",
-    level           = 8,
+    level           = 10,
     no_parent       = TRUE,
-  ##  accept_follow   = "/day/",
+    accept_follow   = ".*",
     accept_download = "\\.nc$"
   ),
   data_group  = "Regional climate model output"

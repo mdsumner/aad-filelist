@@ -18,9 +18,9 @@ src <- bowerbird::bb_source(
   source_url  = "https://cordex.dmi.dk/thredds/fileServer/esg_cordex/PolarRes/ANT-12/HCLIMcom-DMI/",
   method      = list(
     "bb_handler_rget",
-    level           = 10,
+    level           = 9,
     no_parent       = TRUE,
-##    accept_follow   = "/day/",
+    accept_follow   = ".*",
     accept_download = "\\.nc$"
   ),
   data_group  = "Regional climate model output"
