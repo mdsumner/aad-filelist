@@ -35,7 +35,6 @@ Each Parquet file has columns:
 | `was_downloaded` | logical; FALSE in a dry-run listing |
 | `ok` | logical; sync success |
 | `sync_time` | UTC timestamp of the sync run |
-| `dry_run` | logical; TRUE if this was an enumeration-only run |
 
 ---
 
@@ -65,8 +64,6 @@ every row of the manifest. Choose something that won't need to change.
 ## Running locally
 
 ```r
-## dry run for one source (enumerate, don't download)
-DRY_RUN=TRUE Rscript sync.R sources/hclim_dmi.R
 
 ## or from within R
 source("sources/hclim_dmi.R")   # defines `src`

@@ -7,7 +7,6 @@
 ##
 ## Environment variables:
 ##   MIRROR_ROOT   local file root for bowerbird (default: tempdir())
-##   DRY_RUN       "TRUE" to enumerate without downloading (default: "FALSE")
 
 library(bowerbird)
 library(arrow)
@@ -28,7 +27,6 @@ src <- e$src
 stopifnot(inherits(src, "data.frame"), "id" %in% names(src))
 id <- src$id[[1]]
 message("Source id: ", id)
-message("Dry run:   ", dry_run)
 
 mirror_root <- Sys.getenv("MIRROR_ROOT", unset = tempdir())
 message("Mirror root: ", mirror_root)
@@ -53,8 +51,7 @@ manifest <- tibble(
   size           = if ("size"             %in% names(file_df)) file_df$size             else NA_real_,
   was_downloaded = if ("was_downloaded"   %in% names(file_df)) file_df$was_downloaded   else NA,
   ok             = if ("ok"              %in% names(file_df)) file_df$ok               else NA,
-  sync_time      = Sys.time(),
-  dry_run        = dry_run
+  sync_time      = Sys.time()
 )
 
 out_file <- paste0(id, ".parquet")
