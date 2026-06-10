@@ -18,7 +18,7 @@ src <- bowerbird::bb_source(
     bucket          = "us-west-2.opendata.source.coop",
     prefix          = "ausantarctic/ghrsst-mur-v2/",
     accept_download = "\\.tif$",
-    max             = 100
+    max             = Inf
   ),
   collection_size = 2000,
   data_group      = "Sea surface temperature"
