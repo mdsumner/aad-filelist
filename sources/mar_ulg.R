@@ -19,9 +19,9 @@ src <- bowerbird::bb_source(
   source_url  = "http://ftp.climato.be/fettweis/MARv3.13/PolarRES/Antarctic/ULg/",
   method      = list(
     "bb_handler_rget",
-    level           = 10,
+    level           = 9,
     no_parent       = TRUE,
-  ##  accept_follow   = "/day",
+    accept_follow   = ".*",
     accept_download = "\\.nc$"
   ),
   data_group  = "Regional climate model output"

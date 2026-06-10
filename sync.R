@@ -17,7 +17,6 @@ args <- commandArgs(trailingOnly = TRUE)
 if (length(args) == 0) stop("Usage: Rscript sync.R sources/<name>.R")
 
 source_file <- args[1]
-dry_run <- TRUE
 
 if (!file.exists(source_file))
   stop("Source file not found: ", source_file)
@@ -37,7 +36,7 @@ message("Mirror root: ", mirror_root)
 cf <- bb_config(local_file_root = mirror_root) |>
   bb_add(src)
 
-status <- bb_sync(cf, verbose = TRUE, dry_run = dry_run, create_root = TRUE)
+status <- bb_sync(cf, verbose = TRUE, dry_run = TRUE, create_root = TRUE)
 
 ## Build per-source Parquet manifest ----------------------------------------
 ## status$files is a list (one element per source) of data frames with
