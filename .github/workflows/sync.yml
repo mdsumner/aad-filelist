@@ -63,6 +63,7 @@ jobs:
         with:
           tag_name: latest
           name: "Latest file listings"
+          body: "Latest raad file listings — updated by sync.yml"
           make_latest: true
           files: "*.parquet"
         env:
