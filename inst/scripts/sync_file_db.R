@@ -14,7 +14,7 @@ if (nchar(src) < 2) {
 }
 
 repo <- "mdsumner/aad-filelist"
-tag  <- "latest"                                   # the established data bucket
+tag  <- "file_db"                                   # the established data bucket
 out  <- file.path(tempdir(), "raad_file_db.parquet")
  
 tryCatch({

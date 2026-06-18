@@ -31,7 +31,6 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          install-sysreqs: false        # don't apt-install SystemRequirements (incl. LaTeX)
           packages: |
             ropensci/bowerbird
             arrow

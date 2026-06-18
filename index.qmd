@@ -51,6 +51,10 @@ source_meta <- map_dfr(source_files, function(f) {
 ```
 
 ```{r read-parquets, eval=TRUE}
+files <- list.files("sources", pattern = "\\.parquet$", full.names = TRUE)  # your actual glob
+#cat("found", length(files), "parquet(s):\n"); print(files)
+stopifnot("no parquet files on runner" = length(files) > 0)
+
 ## Try to read the first row of each Parquet asset to get last sync time.
 ## Falls back gracefully if the asset doesn't exist yet.
 get_parquet_meta <- function(id) {
@@ -90,6 +94,11 @@ climate model output.  Each collection is defined in its own R file using
 [bowerbird](https://docs.ropensci.org/bowerbird/), and the resulting file
 manifest is published here as a Parquet file for each release.
 
+
+## Individual manifests
+
+
+
 **To use a manifest in R:**
 
 ```r
@@ -124,6 +133,17 @@ for (grp_name in sort(names(groups))) {
   cat("\n\n")
 }
 ```
+
+## Full bowerbird+raadtools PUBLIC list
+
+There is full listing of the PUBLIC datasets our bowerbird+raadtools collection knows about here: 
+
+```
+https://github.com/mdsumner/aad-filelist/releases/download/file_db/raad_file_db.parquet
+```
+
+(note that that one parquet is a different structure and different purpose to the above individual manifests, but over time we are working towards some kind of consolidation). 
+
 
 ---
 
