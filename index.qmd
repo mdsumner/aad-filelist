@@ -137,7 +137,7 @@ for (grp_name in sort(names(groups))) {
 
 ```{r read-full-raad,eval=TRUE}
 raad_url <- "https://github.com/mdsumner/aad-filelist/releases/download/file_db/raad_file_db.parquet"
-
+raad_df <- NULL
 raad_df <- tryCatch(arrow::read_parquet(raad_url), error = function(e) NULL)
 
 if (!is.null(raad_df)) {
@@ -145,6 +145,7 @@ if (!is.null(raad_df)) {
   raad_summary <- raad_df |>
     mutate(provider = stringr::str_extract(file, "^[^/]+")) |>
     count(provider, name = "n_files") |>
+    filter(n_files > 1) |> 
     arrange(desc(n_files))
 }
 ```
@@ -152,9 +153,9 @@ if (!is.null(raad_df)) {
 
 ```{r raad-table, results="asis"}
 if (!is.null(raad_df)) {
-  cat(glue("**{nrow(raad_df):,} files** across {nrow(raad_summary)} providers,",
-           " last updated from the RAAD server.\n\n"))
-  
+ # cat(glue("**{nrow(raad_df):,} files** across {nrow(raad_summary)} providers,",
+#           " last updated from the RAAD server.\n\n"))
+
   raad_summary |>
     mutate(
       `Data provider` = glue('<a href="https://{provider}">{provider}</a>'),
