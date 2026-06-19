@@ -4,8 +4,10 @@ on:
   workflow_run:
     workflows: ["Sync file listings"]
     types: [completed]
-  release:
-    types: [published, edited]
+  push:
+    branches: [main]
+    paths:
+      - "index.qmd"
   workflow_dispatch:
 
 permissions:
