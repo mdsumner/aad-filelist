@@ -51,9 +51,9 @@ source_meta <- map_dfr(source_files, function(f) {
 ```
 
 ```{r read-parquets, eval=TRUE}
-files <- list.files("sources", pattern = "\\.parquet$", full.names = TRUE)  # your actual glob
+#files <- list.files("sources", pattern = "\\.parquet$", full.names = TRUE)  # your actual glob
 #cat("found", length(files), "parquet(s):\n"); print(files)
-stopifnot("no parquet files on runner" = length(files) > 0)
+#stopifnot("no parquet files on runner" = length(files) > 0)
 
 ## Try to read the first row of each Parquet asset to get last sync time.
 ## Falls back gracefully if the asset doesn't exist yet.
@@ -134,16 +134,48 @@ for (grp_name in sort(names(groups))) {
 }
 ```
 
+
+```{r read-full-raad,eval=TRUE}
+raad_url <- "https://github.com/mdsumner/aad-filelist/releases/download/file_db/raad_file_db.parquet"
+
+raad_df <- tryCatch(arrow::read_parquet(raad_url), error = function(e) NULL)
+
+if (!is.null(raad_df)) {
+  ## extract top-level domain / data provider from the file path
+  raad_summary <- raad_df |>
+    mutate(provider = stringr::str_extract(file, "^[^/]+")) |>
+    count(provider, name = "n_files") |>
+    arrange(desc(n_files))
+}
+```
 ## Full bowerbird+raadtools PUBLIC list
 
-There is full listing of the PUBLIC datasets our bowerbird+raadtools collection knows about here: 
-
+```{r raad-table, results="asis"}
+if (!is.null(raad_df)) {
+  cat(glue("**{nrow(raad_df):,} files** across {nrow(raad_summary)} providers,",
+           " last updated from the RAAD server.\n\n"))
+  
+  raad_summary |>
+    mutate(
+      `Data provider` = glue('<a href="https://{provider}">{provider}</a>'),
+      `Files in RAAD` = scales::comma(n_files)
+    ) |>
+    select(`Data provider`, `Files in RAAD`) |>
+    knitr::kable(format = "html", escape = FALSE) |>
+    kableExtra::kable_styling(bootstrap_options = c("striped", "hover"),
+                              full_width = FALSE) |>
+    print()
+}
 ```
-https://github.com/mdsumner/aad-filelist/releases/download/file_db/raad_file_db.parquet
+
+Full listing as Parquet (1.4M rows, `file` column, prepend `https://` for URL):
+
+```r
+raad_df <- arrow::read_parquet(
+  "https://github.com/mdsumner/aad-filelist/releases/download/file_db/raad_file_db.parquet"
+)
+raad_df |> dplyr::mutate(url = paste0("https://", file))
 ```
-
-(note that that one parquet is a different structure and different purpose to the above individual manifests, but over time we are working towards some kind of consolidation). 
-
 
 ---
 
