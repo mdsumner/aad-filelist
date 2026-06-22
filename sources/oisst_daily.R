@@ -17,7 +17,7 @@ src <- bowerbird::bb_source(
                   ## each file's date
                   file_date <- stringr::str_match(sub("_preliminary\\.nc$", ".nc", urls), "([[:digit:]]{8})\\.nc")[, 2]
                   ## dates of final files
-                  finals <- na.omit(stringr::str_match(urls, "([[:digit:]]{8})\\.nc")[, 2])
+                  finals <- stats::na.omit(stringr::str_match(urls, "([[:digit:]]{8})\\.nc")[, 2])
                   out <- grepl("\\.nc$", urls) & (!grepl("_preliminary\\.nc$", urls) | (nzchar(file_date) & !file_date %in% finals))
                   out[!grepl("\\.nc$", urls)] <- NA ## non-download links
                   out
