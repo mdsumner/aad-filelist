@@ -1,11 +1,12 @@
 ## sources/cdr_sic_G02202_V6.R
 ## NOAA/NSIDC DAILY Sea Ice Concentration CDR v6 (South and North)
-## 
+##
 ## Maintainer: Michael Sumner
 
 src <- bowerbird::bb_source(
-  name = "NOAA/NSIDC Sea Ice Concentration CDR v6 (South and North)",
+  name = "NOAA-NSIDC Climate Data Record of Passive Microwave Sea Ice Concentration Version 6",
   id = "cdr_sic_G02202_V6",
+  description = "This data set provides a passive microwave sea ice concentration climate data record (CDR) based on gridded brightness temperatures (TBs) from the Nimbus-7 Scanning Multichannel Microwave Radiometer (SMMR) and the Defense Meteorological Satellite Program (DMSP) series of passive microwave radiometers: the Special Sensor Microwave Imager (SSM/I) and the Special Sensor Microwave Imager/Sounder (SSMIS). The sea ice concentration CDR is an estimate of sea ice concentration that is produced by combining concentration estimates from two algorithms developed at the NASA Goddard Space Flight Center (GSFC): the NASA Team (NT) algorithm and the Bootstrap (BT) algorithm. The individual algorithms are used to process and combine brightness temperature data at NSIDC. This product is designed to provide a consistent time series of sea ice concentrations (the fraction, or percentage, of ocean area covered by sea ice) from November 1978 to the present, which spans the coverage of several passive microwave instruments. The data are gridded on the NSIDC polar stereographic grid with 25 km x 25 km grid cells and are available in NetCDF file format. Each file contains a variable with the CDR concentration values as well as variables that hold the raw NT and BT processed concentrations for reference. Variables containing standard deviation, quality flags, and projection information are also included. Files that are from 2013 to the present also contain a prototype CDR sea ice concentration based on gridded TBs from the Advanced Microwave Scanning Radiometer 2 (AMSR2) onboard the GCOM-W1 satellite." ,
   doc_url = "https://nsidc.org/data/g02202/versions/6",
   license = "No constraints on data access or use",
   source_url = c("https://noaadata.apps.nsidc.org/NOAA/G02202_V6/north/daily/", "https://noaadata.apps.nsidc.org/NOAA/G02202_V6/south/daily/"),
@@ -14,6 +15,6 @@ src <- bowerbird::bb_source(
                 level = 2,
                 relative = TRUE,
                 accept_download = "\\.nc$"),
-  collection_size = 10, 
+  collection_size = 10,
   data_group = "Sea ice"
 )
