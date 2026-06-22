@@ -14,5 +14,6 @@ src <- bowerbird::bb_source(
                 level = 2,
                 relative = TRUE,
                 accept_download = "\\.nc$"),
-  collection_size = 10
+  collection_size = 10, 
+  data_group = "Sea ice"
 )
