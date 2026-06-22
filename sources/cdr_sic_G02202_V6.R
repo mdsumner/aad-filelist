@@ -5,7 +5,7 @@
 
 src <- bowerbird::bb_source(
   name = "NOAA/NSIDC Sea Ice Concentration CDR v6 (South and North)",
-  id = "G02202_V6",
+  id = "cdr_sic_G02202_V6",
   doc_url = "https://nsidc.org/data/g02202/versions/6",
   license = "No constraints on data access or use",
   source_url = c("https://noaadata.apps.nsidc.org/NOAA/G02202_V6/north/daily/", "https://noaadata.apps.nsidc.org/NOAA/G02202_V6/south/daily/"),
