@@ -136,7 +136,7 @@ for (grp_name in sort(names(groups))) {
 
 
 ```{r read-full-raad,eval=TRUE}
-raad_url <- "https://github.com/mdsumner/aad-filelist/releases/download/file_db/raad_file_db.parquet"
+raad_url <- "https://github.com/mdsumner/aad-filelist/releases/download/latest/raad_file_db.parquet"
 raad_df <- NULL
 raad_df <- tryCatch(arrow::read_parquet(raad_url), error = function(e) NULL)
 
