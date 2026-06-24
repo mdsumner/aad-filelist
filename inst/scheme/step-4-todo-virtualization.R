@@ -47,7 +47,8 @@
 ##    this just brings raad-family to the door.) The cube IS the spec:
 ##    16365 x 4 chunk-refs + small coord arrays; one ref = (key -> day's .nc
 ##    byte range for that var); regular grid, no time-edge cases.
-##
+##   rhdf5 over /rdsi needs HDF5_USE_FILE_LOCKING=FALSE, set per-process (main + workers);
+## blocklist still fills-not-drops on any open failure and reports it against set.
 ## 2. refs-Parquet -> Icechunk. (also done before.) First layer in the stack
 ##    with REAL versioned commits -> natively answers the parked "changes"
 ##    (same-key-new-bytes) problem.

@@ -49,6 +49,8 @@ n_undated <- sum(is.na(files$date))
 if (n_undated > 0) message(sprintf("dropping %d undated file(s)", n_undated))
 files <- dplyr::filter(files, !is.na(date))
 
+files <- dplyr::filter_out(files, stringr::str_detect(file, "preliminary"))
+
 ## --- dedup: arrange the PREFERENCE first, THEN distinct keeps the first ------
 ## final (preliminary == FALSE) sorts ahead of preliminary, so the final wins.
 set <- files |>
