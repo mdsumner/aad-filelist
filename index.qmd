@@ -153,8 +153,9 @@ if (!is.null(raad_df)) {
 
 ```{r raad-table, results="asis"}
 if (!is.null(raad_df)) {
- # cat(glue("**{nrow(raad_df):,} files** across {nrow(raad_summary)} providers,",
-#           " last updated from the RAAD server.\n\n"))
+  cat(glue("**{scales::comma(nrow(raad_df))} files** across ",
+           "{nrow(raad_summary)} providers ",
+           "(providers with a single file are omitted from the table).\n\n"))
 
   raad_summary |>
     mutate(
@@ -169,11 +170,11 @@ if (!is.null(raad_df)) {
 }
 ```
 
-Full listing as Parquet (1.4M rows, `file` column, prepend `https://` for URL):
+Full listing as Parquet (`file` column; prepend `https://` for a URL):
 
 ```r
 raad_df <- arrow::read_parquet(
-  "https://github.com/mdsumner/aad-filelist/releases/download/file_db/raad_file_db.parquet"
+  "https://github.com/mdsumner/aad-filelist/releases/download/latest/raad_file_db.parquet"
 )
 raad_df |> dplyr::mutate(url = paste0("https://", file))
 ```

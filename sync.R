@@ -1,9 +1,12 @@
 #!/usr/bin/env Rscript
 ## sync.R
-## Usage: Rscript sync.R sources/hclim_dmi.R [--dry-run]
+## Usage: Rscript sync.R sources/<name>.R
 ##
 ## Sources one sources/*.R file (which must define a single `src` object),
 ## runs bb_sync, and writes a Parquet file named <id>.parquet.
+##
+## Note: bb_sync always runs with dry_run = TRUE here; this repo builds
+## file listings only and never downloads the data itself.
 ##
 ## Environment variables:
 ##   MIRROR_ROOT   local file root for bowerbird (default: tempdir())
