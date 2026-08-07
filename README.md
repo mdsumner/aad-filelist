@@ -49,6 +49,7 @@ Each Parquet file has columns:
 | `cdr_sic_G02202_V6` | [cdr_sic_G02202_V6.R](sources/cdr_sic_G02202_V6.R) | [parquet](../../releases/download/latest/cdr_sic_G02202_V6.parquet) |
 | `noaa_oisst_daily` | [oisst_daily.R](sources/oisst_daily.R) | [parquet](../../releases/download/latest/noaa_oisst_daily.parquet) |
 | `ausantarctic-ghrsst-mur-v2` | [ausantarctic_ghrsst.R](sources/ausantarctic_ghrsst.R) | [parquet](../../releases/download/latest/ausantarctic-ghrsst-mur-v2.parquet) |
+| `cordex-polarres-ant12-metum-bas` | [metum_bas.R](sources/metum_bas.R) | [parquet](../../releases/download/latest/cordex-polarres-ant12-metum-bas.parquet) |
 
 In addition the same `latest` release carries `raad_file_db.parquet`, the full
 bowerbird+raadtools public file listing, uploaded daily by an external process:
