@@ -7,7 +7,9 @@
 ## method) and optionally `engine`, a list naming another lister:
 ##   engine <- list(type = "s3-list", endpoint = ..., prefix = ..., url_base = ...,
 ##                  bucket = NULL, accept = NULL)
-## Without `engine` the listing is a bowerbird dry run (urls only).
+## or list(type = "urls", urls = c(...)) for a fixed set of files (sized by HEAD).
+## Without `engine` the listing is a bowerbird dry run (urls only). `bb_id`,
+## if set, is the bowerbird/blueant id when it differs from the corpus key.
 ##
 ## PREV_DIR holds current__<source_id>.parquet from the previous run, if any:
 ## with rule head_new, urls not in it (or with no size there) are HEADed; with
@@ -57,7 +59,7 @@ rec <- lapply(as.list(src), function(v) {
   if (is.function(v)) paste(deparse(v), collapse = "\n") else v
 })
 rec$method <- lapply(src$method[[1]], function(v) if (is.function(v)) paste(deparse(v), collapse = "\n") else v)
-def <- list(source_id = source_id, bb_id = source_id, source_file = basename(source_file),
+def <- list(source_id = source_id, bb_id = e$bb_id %||% source_id, source_file = basename(source_file),
             engine = engine %||% list(type = "bowerbird"), rule = rule, record = rec,
             bowerbird_version = bb_version)
 jsonlite::write_json(def, file.path(out_dir, paste0(source_id, ".json")), auto_unbox = TRUE,
@@ -72,6 +74,12 @@ res <- tryCatch({
     u <- if ("url" %in% names(fd)) fd$url else character()
     u <- u[!is.na(u) & nzchar(u)]
     lst <- corpus_listing(u, how = "none")
+  } else if (identical(engine$type, "urls")) {
+    ## a fixed list of files (static products): sized by HEAD
+    lst <- corpus_listing(unique(engine$urls), how = "none")
+  } else if (identical(engine$type, "cmr")) {
+    lst <- engine_cmr(engine$concept_id, engine$url_match %||% "^https://")
+    status$n_requests <- attr(lst, "n_requests") %||% 0
   } else if (identical(engine$type, "s3-list")) {
     lst <- engine_s3_list(engine$endpoint, engine$prefix %||% "", engine$url_base,
                           bucket = engine$bucket, accept = engine$accept)
@@ -87,6 +95,7 @@ res <- tryCatch({
              else lst$url %in% prev$url[!is.na(prev$size) | !is.na(prev$etag)]
     need <- need | (unsized & !known)
   }
+  if (rule$head_all) need <- need | lst$how %in% c("none", "listing")
   need <- need | (lst$how %in% c("none", "listing") &
                   corpus_recent(lst$url, rule$date_regex, rule$recheck_days))
   if (any(need)) {

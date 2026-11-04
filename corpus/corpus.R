@@ -71,6 +71,7 @@ CORPUS_RULE_DEFAULTS <- list(
   storage = "auto",        # snapshot, diff, auto (snapshot below 100000 urls)
   snapshot_every = 12,     # with diff storage, a full snapshot every N runs
   head_new = TRUE,         # HEAD urls not seen before when the engine gives no size/etag
+  head_all = FALSE,        # HEAD every url every run (small static sources)
   recheck_days = 0,        # also HEAD urls whose date (date_regex) is this recent
   date_regex = NA_character_, # one capture group, YYYYMMDD or YYYYMM, from the url
   head_rate = 5,           # max HEAD requests per second
@@ -133,6 +134,57 @@ engine_s3_list <- function(endpoint, prefix = "", url_base, bucket = NULL,
        else data.frame(key = character(), size = double(), mtime = character(), etag = character())
   if (!is.null(accept)) d <- d[grepl(accept, d$key), , drop = FALSE]
   out <- corpus_listing(paste0(url_base, d$key), d$size, .parse_time(d$mtime), d$etag, "s3-list")
+  attr(out, "n_requests") <- n_req
+  out
+}
+
+## NASA CMR granule search (public: listing needs no Earthdata login, only
+## downloading does). size from the granule metadata; mtime and the change
+## signal from DataGranule ProductionDateTime (a reprocessed granule gets a
+## new one; the revision id also moves on metadata-only edits, so it is not
+## used). url is the first GET DATA link matching `url_match`.
+engine_cmr <- function(concept_id, url_match = "^https://", page_size = 2000,
+                       max_pages = Inf) {
+  base <- paste0("https://cmr.earthdata.nasa.gov/search/granules.umm_json?collection_concept_id=",
+                 concept_id, "&page_size=", page_size, "&sort_key=start_date")
+  after <- NULL
+  rows <- list()
+  n_req <- 0
+  repeat {
+    h <- curl::new_handle(useragent = CORPUS_UA)
+    if (!is.null(after)) curl::handle_setheaders(h, "CMR-Search-After" = after)
+    res <- curl::curl_fetch_memory(base, handle = h)
+    n_req <- n_req + 1
+    if (res$status_code != 200) stop("cmr: HTTP ", res$status_code, " for ", concept_id)
+    d <- jsonlite::fromJSON(rawToChar(res$content), simplifyVector = FALSE)
+    items <- d$items
+    if (!length(items)) break
+    rows[[length(rows) + 1]] <- do.call(rbind, lapply(items, function(it) {
+      u <- it$umm
+      links <- vapply(Filter(function(r) identical(r$Type, "GET DATA"), u$RelatedUrls %||% list()),
+                      function(r) r$URL, "")
+      link <- links[grepl(url_match, links)][1]
+      ad <- u$DataGranule$ArchiveAndDistributionInformation %||% list()
+      sz <- NA_real_
+      if (length(ad)) {
+        a <- ad[[1]]
+        sz <- if (!is.null(a$SizeInBytes)) as.double(a$SizeInBytes)
+              else if (!is.null(a$Size)) as.double(a$Size) *
+                switch(toupper(a$SizeUnit %||% "MB"), KB = 2^10, MB = 2^20, GB = 2^30, B = 1, NA_real_)
+              else NA_real_
+      }
+      prod <- u$DataGranule$ProductionDateTime %||% NA_character_
+      data.frame(url = link %||% NA_character_, size = sz, mtime = prod,
+                 etag = if (is.na(prod)) NA_character_ else paste0("cmr-prod:", prod),
+                 stringsAsFactors = FALSE)
+    }))
+    after <- curl::parse_headers_list(res$headers)[["cmr-search-after"]]
+    if (is.null(after) || length(items) < page_size || n_req >= max_pages) break
+  }
+  d <- if (length(rows)) do.call(rbind, rows) else
+         data.frame(url = character(), size = double(), mtime = character(), etag = character())
+  d <- d[!is.na(d$url), , drop = FALSE]
+  out <- corpus_listing(d$url, d$size, .parse_time(d$mtime), d$etag, "api")
   attr(out, "n_requests") <- n_req
   out
 }
