@@ -23,6 +23,20 @@ here <- dirname(sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value =
 source(file.path(here, "corpus.R"))
 
 dir.create(run_dir, showWarnings = FALSE, recursive = TRUE)
+
+## a past run's file: corpus_dir/runs/<id>/<run_id>.parquet, else the
+## run-<run_id> release under CORPUS_RUN_BASE (sync.yml sets it)
+.fetch_run <- function(id, rid) {
+  f <- file.path(corpus_dir, "runs", id, paste0(rid, ".parquet"))
+  if (file.exists(f)) return(corpus_read(f))
+  base <- Sys.getenv("CORPUS_RUN_BASE")
+  if (!nzchar(base)) return(NULL)
+  tmp <- tempfile(fileext = ".parquet")
+  u <- sprintf("%s/run-%s/runs__%s__%s.parquet", base, rid, id, rid)
+  ok <- tryCatch(utils::download.file(u, tmp, mode = "wb", quiet = TRUE) == 0,
+                 error = function(e) FALSE, warning = function(w) FALSE)
+  if (ok) corpus_read(tmp) else NULL
+}
 runs_file <- file.path(corpus_dir, "runs.parquet")
 runs <- corpus_read(runs_file)
 new_runs <- list()
@@ -59,8 +73,22 @@ for (sf in status_files) {
     now <- corpus_read(lst_file)
     cur_file <- file.path(corpus_dir, "current", paste0(id, ".parquet"))
     prev <- corpus_read(cur_file)
+    mine <- if (is.null(runs)) NULL else runs[runs$source_id == id & runs$ok, , drop = FALSE]
+    lost <- is.null(prev) && !is.null(mine) && nrow(mine) > 0
+    if (lost) {
+      ## current/<id> is gone but the source has ok runs: rebuild it
+      prev <- corpus_rebuild_current(mine, function(rid) .fetch_run(id, rid),
+                                     corpus_read(file.path(corpus_dir, "changes", paste0(id, ".parquet"))))
+      message(id, ": current missing, ",
+              if (is.null(prev)) "could not rebuild it from run files" else
+                sprintf("rebuilt from run files (%d url(s))", nrow(prev)))
+    }
     n_prev <- if (is.null(prev)) 0 else nrow(prev)
-    if (corpus_short(n_prev, nrow(now), rule$max_drop)) {
+    if (lost && is.null(prev)) {
+      row$ok <- FALSE
+      row$n_urls <- nrow(now)
+      row$message <- "current missing and not rebuilt from run files: run not folded in"
+    } else if (corpus_short(n_prev, nrow(now), rule$max_drop)) {
       row$ok <- FALSE
       row$n_urls <- nrow(now)
       row$message <- sprintf("short listing refused: %d url(s), previous run %d (max_drop %.2f)",
@@ -70,7 +98,6 @@ for (sf in status_files) {
       cmp <- corpus_compare(prev, now, run_id, id,
                             confirm = function(u) corpus_head(u, rate = rule$head_rate))
       ## storage: a snapshot, or a diff against the last run of this source
-      mine <- if (is.null(runs)) NULL else runs[runs$source_id == id & runs$ok, , drop = FALSE]
       last <- if (is.null(mine) || !nrow(mine)) NULL else mine[nrow(mine), ]
       since_snap <- if (is.null(mine) || !nrow(mine)) Inf else {
         s <- which(mine$kind == "snapshot")

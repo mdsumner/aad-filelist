@@ -307,6 +307,52 @@ corpus_compare <- function(prev, now, run_id, source_id, confirm = NULL) {
                      n_change = sum(changed), n_mtime_false_alarm = false_alarm))
 }
 
+## current/<id> lost (an upload that failed after --clobber deleted the old
+## asset) while runs.parquet still has ok runs of the source: rebuild it from
+## the last snapshot and the diffs after it, so the next compare is against
+## what was really there, not an empty table (which would log every url as a
+## new add). `fetch(run_id)` returns that run's file or NULL. first_seen and
+## last_changed come from `changes` where it has them, else the snapshot run.
+corpus_rebuild_current <- function(mine, fetch, changes = NULL) {
+  mine <- mine[mine$ok & mine$kind %in% c("snapshot", "diff"), , drop = FALSE]
+  s <- which(mine$kind == "snapshot")
+  if (!length(s)) return(NULL)
+  mine <- mine[max(s):nrow(mine), , drop = FALSE]
+  cur <- NULL
+  for (i in seq_len(nrow(mine))) {
+    rid <- mine$run_id[i]
+    x <- fetch(rid)
+    if (is.null(x)) return(NULL)
+    x$first_seen <- x$last_changed <- x$last_seen <- rep(rid, nrow(x))
+    keep <- c("url", "size", "mtime", "etag", "how", "first_seen", "last_changed", "last_seen")
+    if (i == 1) {
+      cur <- x[x$op == "present", keep, drop = FALSE]
+      next
+    }
+    cur$last_seen <- rep(rid, nrow(cur))
+    cur <- cur[!cur$url %in% x$url[x$op == "remove"], , drop = FALSE]
+    ch <- x[x$op == "change", , drop = FALSE]
+    m <- match(ch$url, cur$url)
+    ok <- !is.na(m)
+    for (k in c("size", "mtime", "etag", "how")) cur[[k]][m[ok]] <- ch[[k]][ok]
+    cur$last_changed[m[ok]] <- rid
+    cur <- rbind(cur, x[x$op == "add" & !x$url %in% cur$url, keep, drop = FALSE])
+  }
+  if (!is.null(changes) && nrow(changes)) {
+    ad <- changes[changes$op == "add", , drop = FALSE]
+    f <- tapply(ad$run_id, ad$url, min)
+    i <- cur$url %in% names(f)
+    cur$first_seen[i] <- pmin(cur$first_seen[i], unname(f[cur$url[i]]))
+    lc <- changes[changes$op %in% c("add", "change"), , drop = FALSE]
+    l <- tapply(lc$run_id, lc$url, max)
+    i <- cur$url %in% names(l)
+    cur$last_changed[i] <- pmax(cur$last_changed[i], unname(l[cur$url[i]]))
+  }
+  cur <- cur[order(cur$url), , drop = FALSE]
+  rownames(cur) <- NULL
+  cur
+}
+
 ## a listing far shorter than the last one is a failed listing, not a mass
 ## withdrawal: refuse it (current stays as it was)
 corpus_short <- function(n_prev, n_now, max_drop) {

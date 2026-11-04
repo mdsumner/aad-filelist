@@ -60,6 +60,25 @@ check(corpus_short(1000, 400, 0.5), "60% drop refused")
 check(!corpus_short(1000, 600, 0.5), "40% drop accepted")
 check(!corpus_short(0, 0, 0.5), "first run never short")
 
+## rebuild a lost current from run files: snapshot R1, then diffs R2, R3.
+## Diffs hold events only, so values learned without an event (an mtime
+## false alarm, a size filled by HEAD) wait for the next run's listing.
+snap <- function(cmp, rid) { x <- cmp$current
+  data.frame(source_id = "src", run_id = rid, op = "present", url = x$url, size = x$size,
+             mtime = x$mtime, etag = x$etag, how = x$how, stringsAsFactors = FALSE) }
+diffs <- function(cmp) cmp$events[, c("source_id", "run_id", "op", "url", "size", "mtime", "etag", "how")]
+b2 <- corpus_compare(c1$current, r2, "R2", "src", confirm = heads)
+b3 <- corpus_compare(b2$current, r3, "R3", "src")
+files <- list(R1 = snap(c1, "R1"), R2 = diffs(b2), R3 = diffs(b3))
+mine <- data.frame(run_id = c("R1", "R2", "R3"), ok = TRUE, kind = c("snapshot", "diff", "diff"))
+rb <- corpus_rebuild_current(mine, function(rid) files[[rid]], rbind(c1$events, b2$events, b3$events))
+check(identical(rb$url, b3$current$url), "rebuilt current has the same urls")
+check(identical(rb$etag, b3$current$etag), "rebuilt etags")
+check(identical(rb$last_changed, b3$current$last_changed), "rebuilt last_changed")
+check(identical(rb$first_seen, b3$current$first_seen), "rebuilt first_seen")
+check(rb$size[rb$url == "https://h/f2.nc"] == 21 || !("https://h/f2.nc" %in% rb$url), "change event size applied")
+check(is.null(corpus_rebuild_current(mine, function(rid) NULL)), "no run files: no rebuild")
+
 ## recent dates
 u <- c(sprintf("x_%s_.nc", format(Sys.Date() - 3, "%Y%m%d")), "x_19800101_.nc", "nodate.nc")
 check(identical(corpus_recent(u, "_([0-9]{8})_", 7), c(TRUE, FALSE, FALSE)), "recheck window")
