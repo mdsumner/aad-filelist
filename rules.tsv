@@ -15,6 +15,7 @@ ausantarctic-bedmap	weekly	auto									s3-list; our product
 ausantarctic-ibcso	weekly	auto									s3-list; our product
 ausantarctic-gebco	weekly	auto									s3-list; our product
 ausantarctic-scratch	weekly	auto									s3-list; every draft store object
+pgc_rema_v2	weekly	auto									s3-list; PGC open data, about 84k objects
 bas_bedmap3	weekly	snapshot		yes	yes						one fixed file; HEAD every run
 pangaea_937574_ibcso_v2	weekly	snapshot		yes	yes						fixed files; HEAD every run
 pangaea_805734_ibcso_v1	weekly	snapshot		yes	yes						superseded upstream; salvage watch
