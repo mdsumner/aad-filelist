@@ -69,8 +69,13 @@ res <- tryCatch({
   if (is.null(engine)) {
     cf <- bowerbird::bb_add(bowerbird::bb_config(local_file_root = Sys.getenv("MIRROR_ROOT", tempdir())), src)
     st <- bowerbird::bb_sync(cf, verbose = TRUE, dry_run = TRUE, create_root = TRUE)
-    if (!isTRUE(st$status$ok[1])) stop("bb_sync reported not ok")
+    ## bb_sync returns one row per source; `status` is a logical column in
+    ## current bowerbird (a data frame with `ok` in some older versions)
+    okv <- st$status
+    if (is.data.frame(okv)) okv <- okv$ok
+    if (!isTRUE(as.logical(unlist(okv))[1])) stop("bb_sync reported not ok")
     fd <- st$files[[1]]
+    if (!is.data.frame(fd)) fd <- data.frame(url = character())
     u <- if ("url" %in% names(fd)) fd$url else character()
     u <- u[!is.na(u) & nzchar(u)]
     lst <- corpus_listing(u, how = "none")

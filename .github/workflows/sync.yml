@@ -17,7 +17,7 @@ on:
   workflow_dispatch:
     inputs:
       source:
-        description: "Single source to sync (e.g. hclim_dmi). Leave blank for all."
+        description: "Source(s) to sync, comma separated (e.g. hclim_dmi,oisst_v21_s3). Leave blank for all."
         required: false
         default: ""
 
@@ -39,10 +39,19 @@ jobs:
       - uses: actions/checkout@v6
       - id: ls
         shell: bash
+        env:
+          SOURCES: ${{ github.event.inputs.source }}
         run: |
           echo "run_id=$(date -u +%Y%m%dT%H%M%SZ)" >> "$GITHUB_OUTPUT"
-          if [ -n "${{ github.event.inputs.source }}" ]; then
-            echo "sources=[\"${{ github.event.inputs.source }}\"]" >> "$GITHUB_OUTPUT"
+          ## a manual run takes one source or several, comma separated: one
+          ## run per batch, because the corpus group keeps only one run
+          ## queued (a second dispatch cancels the first one waiting)
+          if [ -n "$SOURCES" ]; then
+            names=$(echo "$SOURCES" | tr ', ' '\n\n' | sed '/^$/d' | jq -R . | jq -sc .)
+            for s in $(echo "$names" | jq -r '.[]'); do
+              [ -f "sources/$s.R" ] || { echo "no sources/$s.R" >&2; exit 1; }
+            done
+            echo "sources=$names" >> "$GITHUB_OUTPUT"
           else
             names=$(ls sources/*.R | xargs -I{} basename {} .R | jq -R . | jq -sc .)
             echo "sources=$names" >> "$GITHUB_OUTPUT"
@@ -143,6 +152,8 @@ jobs:
           bash corpus/flat.sh unflat flat store
 
       - name: Derive
+        env:
+          CORPUS_RUN_BASE: https://github.com/${{ github.repository }}/releases/download
         run: Rscript corpus/derive.R "$RUN_ID" listings store run
 
       - name: Publish run-${{ env.RUN_ID }}

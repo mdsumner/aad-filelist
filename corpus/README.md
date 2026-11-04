@@ -78,6 +78,17 @@ A listing shorter than `(1 - max_drop)` of the last one is refused (the run
 row says so, `current` is unchanged): a failed crawl, not a mass
 withdrawal. Withdrawn files show as `remove` events.
 
+If `current/<id>` is missing while `runs.parquet` has ok runs of the source
+(a release upload that failed after `--clobber` removed the old asset), derive
+rebuilds it from the last snapshot and the diffs after it (from the
+`run-<run_id>` releases), with `first_seen` and `last_changed` from
+`changes`. If the run files cannot be read, the run is refused rather than
+logging every url as a new add.
+
+A manual run (Actions, "Sync file listings") takes one source or several,
+comma separated. Dispatch a batch as one run: the `corpus` concurrency group
+keeps only one run waiting, so a second dispatch cancels the first one queued.
+
 ## Sources
 
 A `sources/*.R` file defines `src` (a `bb_source`: the record, and the
