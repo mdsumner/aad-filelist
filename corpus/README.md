@@ -19,6 +19,7 @@ Schema v0. Plan and rationale: the project's listing-corpus move plan
 | test | `corpus/test-corpus.R` | the change rule on fixtures, no network: `Rscript corpus/test-corpus.R` |
 | rules | `rules.tsv` | per-source rules; empty cell = default |
 | assets | `corpus/flat.sh` | tree <-> flat release asset names ("/" is "__") |
+| retry | `corpus/retry.sh` | `retry <cmd>` with backoff, for gh release calls (GitHub 5xx) |
 
 ## Where it is published (GitHub releases, for now)
 
