@@ -1,0 +1,13 @@
+# Per-source corpus rules (corpus/corpus.R CORPUS_RULE_DEFAULTS; empty = default).
+# storage: snapshot, diff, auto (snapshot below 100000 urls). head_new: HEAD urls
+# never sized before. recheck_days + date_regex: HEAD recent urls again (NRT
+# rewrites). max_drop: refuse a listing shorter than (1 - max_drop) x the last.
+# Change a default with the matrix.parquet row that justified it.
+source_id	cadence	storage	snapshot_every	head_new	recheck_days	date_regex	head_rate	max_drop	credentials	notes
+cdr_sic_G02202_V6	weekly	auto		yes	0	_([0-9]{8})_	5			final CDR; NRT is a separate source
+noaa_oisst_daily	weekly	auto		yes	14	\.([0-9]{8})(_preliminary)?\.nc$	5			NCEI crawl; RDSI-comparable
+noaa_oisst_v21_s3	weekly	auto								s3-list gives size/etag
+amsr2_asi_s3125	weekly	auto		yes	7	-([0-9]{8})-	5			Bremen reprocessed in the past
+ausantarctic-ghrsst-mur-v2	weekly	auto								s3-list; our COGs
+pawsey_esacci_oc_cog	weekly	auto								s3-list; our COGs
+nci-gb6-bran2023	weekly	auto		no						THREDDS dry run; no HEAD until thredds is allowed (day one is rget/S3)

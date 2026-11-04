@@ -1,5 +1,7 @@
 #!/usr/bin/env Rscript
 ## sync.R
+## Superseded by corpus/list.R + corpus/derive.R (sync.yml no longer calls
+## this); kept for one-off local listings in the old shape.
 ## Usage: Rscript sync.R sources/<name>.R
 ##
 ## Sources one sources/*.R file (which must define a single `src` object),

@@ -9,6 +9,11 @@ on the [latest release](../../releases/latest).
 
 **Summary page:** <https://mdsumner.github.io/aad-filelist/>
 
+**Listing corpus:** every run now keeps its listings (`run-<run_id>`
+releases) and a derived corpus (`corpus` release: what exists now, what
+changed, how each source behaves). See [corpus/README.md](corpus/README.md).
+The `latest` release below keeps its old shape.
+
 ---
 
 ## Using a file listing
