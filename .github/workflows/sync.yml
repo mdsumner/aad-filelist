@@ -79,7 +79,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p prev
-          gh release download corpus -D prev -p 'current__*.parquet' || echo "no corpus release yet"
+          source corpus/retry.sh
+          if gh release view corpus > /dev/null 2>&1; then
+            retry gh release download corpus -D prev -p 'current__*.parquet' --clobber
+          else
+            echo "no corpus release yet"
+          fi
 
       - name: List
         env:
@@ -125,34 +130,64 @@ jobs:
           path: listings
           merge-multiple: true
 
+      ## the corpus tree is built in store/, not corpus/ (that is the code)
       - name: Corpus as it stood
         run: |
-          mkdir -p flat corpus
-          gh release download corpus -D flat || echo "no corpus release yet: first run"
-          bash corpus/flat.sh unflat flat corpus
+          source corpus/retry.sh
+          rm -rf flat store && mkdir -p flat store
+          if gh release view corpus > /dev/null 2>&1; then
+            retry gh release download corpus -D flat --clobber -p '*.parquet' -p 'sources__*.json'
+          else
+            echo "no corpus release yet: first run"
+          fi
+          bash corpus/flat.sh unflat flat store
 
       - name: Derive
-        run: Rscript corpus/derive.R "$RUN_ID" listings corpus run
+        run: Rscript corpus/derive.R "$RUN_ID" listings store run
 
       - name: Publish run-${{ env.RUN_ID }}
         run: |
-          mkdir -p runflat
+          source corpus/retry.sh
+          rm -rf runflat && mkdir -p runflat
           bash corpus/flat.sh flat run runflat
-          gh release create "run-$RUN_ID" runflat/* --title "Corpus run $RUN_ID" \
-            --notes "Listings of run $RUN_ID (corpus/README.md). Never rewritten." --latest=false
+          ## a retried create can succeed server side and still report an
+          ## error, so create only if absent, then upload
+          gh release view "run-$RUN_ID" > /dev/null 2>&1 || \
+            retry gh release create "run-$RUN_ID" --title "Corpus run $RUN_ID" \
+              --notes "Listings of run $RUN_ID (corpus/README.md). Never rewritten." --latest=false || \
+            gh release view "run-$RUN_ID" > /dev/null
+          retry gh release upload "run-$RUN_ID" runflat/* --clobber
 
       - name: Publish corpus
         run: |
+          source corpus/retry.sh
           rm -rf flat && mkdir -p flat
-          bash corpus/flat.sh flat corpus flat
+          bash corpus/flat.sh flat store flat
           gh release view corpus > /dev/null 2>&1 || \
-            gh release create corpus --title "Listing corpus (derived)" \
-              --notes "runs.parquet, matrix.parquet, current__<id>, changes__<id>, sources__<id>__<hash>. Rebuilt every run (corpus/README.md)." --latest=false
-          gh release upload corpus flat/* --clobber
+            retry gh release create corpus --title "Listing corpus (derived)" \
+              --notes "runs.parquet, matrix.parquet, current__<id>, changes__<id>, sources__<id>__<hash>. Rebuilt every run (corpus/README.md)." --latest=false || \
+            gh release view corpus > /dev/null
+          ## per-source tables first, runs.parquet and matrix.parquet last: a
+          ## reader that sees this run in runs.parquet sees its tables too
+          for f in flat/*; do
+            case "$(basename "$f")" in runs.parquet|matrix.parquet) continue ;; esac
+            retry gh release upload corpus "$f" --clobber
+          done
+          for f in flat/runs.parquet flat/matrix.parquet; do
+            [ -f "$f" ] && retry gh release upload corpus "$f" --clobber
+          done
+          ## drop assets that are not corpus tables (e.g. strays from an old run)
+          gh release view corpus --json assets -q '.assets[].name' | \
+            grep -Ev '^(runs|matrix)\.parquet$|^(current|changes)__.*\.parquet$|^sources__.*\.json$' | \
+            while read -r a; do
+              echo "deleting stray asset $a"
+              retry gh release delete-asset corpus "$a" -y
+            done || true
 
       - name: Publish latest (old shape)
         run: |
           ls listings/legacy/*.parquet > /dev/null 2>&1 || exit 0
+          source corpus/retry.sh
           gh release view latest > /dev/null 2>&1 || \
-            gh release create latest --title "Latest file listings" --notes "Latest file listings, updated by sync.yml"
-          gh release upload latest listings/legacy/*.parquet --clobber
+            retry gh release create latest --title "Latest file listings" --notes "Latest file listings, updated by sync.yml"
+          retry gh release upload latest listings/legacy/*.parquet --clobber
