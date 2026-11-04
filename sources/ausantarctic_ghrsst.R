@@ -23,3 +23,13 @@ src <- bowerbird::bb_source(
   collection_size = 2000,
   data_group      = "Sea surface temperature"
 )
+
+## corpus engine: S3 ListObjectsV2 (size, etag, mtime with the listing);
+## urls written as the public data.source.coop form the GHRSST store reads
+engine <- list(
+  type = "s3-list",
+  endpoint = "https://s3.us-west-2.amazonaws.com",
+  bucket = "us-west-2.opendata.source.coop",
+  prefix = "ausantarctic/ghrsst-mur-v2/",
+  url_base = "https://data.source.coop/",
+  accept = "\\.tif$")

@@ -14,6 +14,14 @@ ids <- vapply(source_files, function(f) {
   e$src$id[[1]]
 }, character(1))
 
+## corpus keys: path safe, and no "__" (the flat release asset separator)
+bad <- ids[!grepl("^[A-Za-z0-9._-]+$", ids) | grepl("__", ids, fixed = TRUE)]
+if (length(bad) > 0) {
+  message("ERROR: source id(s) not usable as corpus keys ([A-Za-z0-9._-], no '__'):")
+  for (f in names(bad)) message("  id '", bad[[f]], "' in: ", f)
+  quit(status = 1)
+}
+
 dupes <- ids[duplicated(ids)]
 
 if (length(dupes) > 0) {
