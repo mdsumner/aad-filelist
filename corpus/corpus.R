@@ -71,6 +71,7 @@ CORPUS_RULE_DEFAULTS <- list(
   storage = "auto",        # snapshot, diff, auto (snapshot below 100000 urls)
   snapshot_every = 12,     # with diff storage, a full snapshot every N runs
   head_new = TRUE,         # HEAD urls not seen before when the engine gives no size/etag
+  head_all = FALSE,        # HEAD every url every run (small static sources)
   recheck_days = 0,        # also HEAD urls whose date (date_regex) is this recent
   date_regex = NA_character_, # one capture group, YYYYMMDD or YYYYMM, from the url
   head_rate = 5,           # max HEAD requests per second
