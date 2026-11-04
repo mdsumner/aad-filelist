@@ -112,6 +112,9 @@ res <- tryCatch({
     status$n_requests <- status$n_requests + sum(need)
     if (any(!ok)) message("HEAD failed for ", sum(!ok), " url(s)")
   }
+  ## nothing listed is a failed crawl (a filter or depth that matches
+  ## nothing), not an empty collection
+  if (!nrow(lst)) stop("listed 0 urls")
   lst
 }, error = function(err) err)
 
@@ -123,8 +126,9 @@ if (inherits(res, "error")) {
 }
 
 corpus_write(res, file.path(out_dir, paste0(source_id, ".listing.parquet")))
-legacy <- data.frame(id = source_id, path = NA_character_, url = res$url, size = res$size,
-                     was_downloaded = FALSE, ok = TRUE, sync_time = Sys.time(),
+legacy <- data.frame(id = rep(source_id, nrow(res)), path = rep(NA_character_, nrow(res)), url = res$url, size = res$size,
+                     was_downloaded = rep(FALSE, nrow(res)), ok = rep(TRUE, nrow(res)),
+                     sync_time = rep(Sys.time(), nrow(res)),
                      stringsAsFactors = FALSE)
 corpus_write(legacy, file.path(out_dir, "legacy", paste0(source_id, ".parquet")))
 status$ok <- TRUE
