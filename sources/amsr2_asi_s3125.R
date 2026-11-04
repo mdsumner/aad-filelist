@@ -15,7 +15,7 @@ src <- bowerbird::bb_source(
   source_url = "https://data.seaice.uni-bremen.de/amsr2/asi_daygrid_swath/s3125/netcdf/",
   license = "Please cite",
   method = list("bb_handler_rget",
-                level = 1,
+                level = 2,   # index -> year folders -> files (as oisst_daily)
                 accept_follow = "/[0-9]{4}/$",
                 accept_download = "asi-AMSR2-s3125-[0-9]{8}-v[0-9.]+\\.nc$"),
   collection_size = 110,
