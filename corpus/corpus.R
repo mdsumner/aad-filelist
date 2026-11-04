@@ -165,14 +165,19 @@ engine_cmr <- function(concept_id, url_match = "^https://", page_size = 2000,
                       function(r) r$URL, "")
       link <- links[grepl(url_match, links)][1]
       ad <- u$DataGranule$ArchiveAndDistributionInformation %||% list()
-      sz <- NA_real_
-      if (length(ad)) {
-        a <- ad[[1]]
-        sz <- if (!is.null(a$SizeInBytes)) as.double(a$SizeInBytes)
-              else if (!is.null(a$Size)) as.double(a$Size) *
-                switch(toupper(a$SizeUnit %||% "MB"), KB = 2^10, MB = 2^20, GB = 2^30, B = 1, NA_real_)
-              else NA_real_
-      }
+      ## one entry per file in the granule (the data file, its .md5, ...):
+      ## take the entry named like the link, else the largest
+      bytes <- vapply(ad, function(a) {
+        if (!is.null(a$SizeInBytes)) as.double(a$SizeInBytes)
+        else if (!is.null(a$Size)) as.double(a$Size) *
+          switch(toupper(a$SizeUnit %||% "MB"), KB = 2^10, MB = 2^20, GB = 2^30, B = 1, NA_real_)
+        else NA_real_
+      }, 0)
+      nm <- vapply(ad, function(a) a$Name %||% "", "")
+      hit <- if (is.na(link)) integer() else which(nm == basename(link))
+      sz <- if (length(hit)) bytes[hit[1]]
+            else if (any(!is.na(bytes))) max(bytes, na.rm = TRUE)
+            else NA_real_
       prod <- u$DataGranule$ProductionDateTime %||% NA_character_
       data.frame(url = link %||% NA_character_, size = sz, mtime = prod,
                  etag = if (is.na(prod)) NA_character_ else paste0("cmr-prod:", prod),
