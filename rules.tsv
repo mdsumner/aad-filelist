@@ -19,5 +19,6 @@ bas_bedmap3	weekly	snapshot		yes	yes						one fixed file; HEAD every run
 pangaea_937574_ibcso_v2	weekly	snapshot		yes	yes						fixed files; HEAD every run
 pangaea_805734_ibcso_v1	weekly	snapshot		yes	yes						superseded upstream; salvage watch
 ibcso_annual	weekly	snapshot		yes	yes						unversioned urls: HEAD every run
-bodc_gebco	weekly	snapshot		yes	yes						2025/2026 folders guessed
+bodc_gebco	weekly	snapshot		yes	yes						CEDA ice surface zips; 2024/2025 paths by pattern
 oceancolour_cci_v6_chlor_a	weekly	auto		no							THREDDS dry run; no HEAD until thredds is allowed
+podaac_mur_sst_v41	weekly	auto		no							CMR search (public); no HEAD: protected urls need Earthdata

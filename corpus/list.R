@@ -77,6 +77,9 @@ res <- tryCatch({
   } else if (identical(engine$type, "urls")) {
     ## a fixed list of files (static products): sized by HEAD
     lst <- corpus_listing(unique(engine$urls), how = "none")
+  } else if (identical(engine$type, "cmr")) {
+    lst <- engine_cmr(engine$concept_id, engine$url_match %||% "^https://")
+    status$n_requests <- attr(lst, "n_requests") %||% 0
   } else if (identical(engine$type, "s3-list")) {
     lst <- engine_s3_list(engine$endpoint, engine$prefix %||% "", engine$url_base,
                           bucket = engine$bucket, accept = engine$accept)
