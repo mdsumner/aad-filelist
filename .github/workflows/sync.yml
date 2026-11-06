@@ -9,6 +9,8 @@ name: Sync file listings
 ##                             current__<id>.parquet, changes__<id>.parquet,
 ##                             sources__<id>__<hash>.json
 ##               latest        the old <id>.parquet shape, for existing readers
+## Both jobs run in the R image (docker/Dockerfile, built by image.yml), so
+## nothing is installed per run.
 ## Release assets are flat: a "/" in the corpus layout is "__" in an asset name.
 
 on:
@@ -23,6 +25,7 @@ on:
 
 permissions:
   contents: write
+  packages: read   # the R image on ghcr.io
 
 ## one run at a time: collect rewrites the corpus release
 concurrency:
@@ -61,6 +64,11 @@ jobs:
     needs: list-sources
     runs-on: ubuntu-latest
     timeout-minutes: 300
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/aad-filelist-r:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       fail-fast: false
       max-parallel: 4
@@ -69,23 +77,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: "release"
-          use-public-rspm: true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          packages: |
-            ropensci/bowerbird
-            nanoparquet
-            curl
-            xml2
-            jsonlite
-
       - name: Previous current listings
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
         run: |
           mkdir -p prev
           source corpus/retry.sh
@@ -114,24 +109,18 @@ jobs:
     needs: [list-sources, sync]
     if: always() && needs.list-sources.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    container:
+      image: ghcr.io/${{ github.repository_owner }}/aad-filelist-r:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
       RUN_ID: ${{ needs.list-sources.outputs.run_id }}
     steps:
       - uses: actions/checkout@v6
-
-      - uses: r-lib/actions/setup-r@v2
-        with:
-          r-version: "release"
-          use-public-rspm: true
-
-      - uses: r-lib/actions/setup-r-dependencies@v2
-        with:
-          packages: |
-            nanoparquet
-            curl
-            xml2
-            jsonlite
 
       - uses: actions/download-artifact@v4
         with:
