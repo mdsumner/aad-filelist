@@ -14,6 +14,12 @@ permissions:
   contents: read
   packages: read   # the R image on ghcr.io
 
+## run steps use bash (source, arrays): inside a job container the default
+## shell is sh
+defaults:
+  run:
+    shell: bash
+
 jobs:
   lint:
     runs-on: ubuntu-latest

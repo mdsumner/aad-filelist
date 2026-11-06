@@ -32,6 +32,12 @@ concurrency:
   group: corpus
   cancel-in-progress: false
 
+## run steps use bash (source, arrays): inside a job container the default
+## shell is sh
+defaults:
+  run:
+    shell: bash
+
 jobs:
   list-sources:
     runs-on: ubuntu-latest
