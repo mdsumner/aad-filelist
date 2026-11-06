@@ -23,3 +23,4 @@ ibcso_annual	weekly	snapshot		yes	yes						unversioned urls: HEAD every run
 bodc_gebco	weekly	snapshot		yes	yes						CEDA ice surface zips; 2024/2025 paths by pattern
 oceancolour_cci_v6_chlor_a	weekly	auto		no							THREDDS dry run; no HEAD until thredds is allowed
 podaac_mur_sst_v41	weekly	auto		no							CMR search (public); no HEAD: protected urls need Earthdata
+pawsey_ct_esm1_6	weekly	auto									s3-list; ACCESS-NRI pilot bucket, expected to move
